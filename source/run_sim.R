@@ -112,9 +112,9 @@ colnames(out) <- c('i', 'n', 'method', 'time', mu_cols)
 # append to dataframe
 write.table(
 	out,
-	here::here('sim', paste0('sim_n', n, '.txt')),
+	here::here('sim', 'sim_out', paste0('sim_n', n, '_i', i, '.txt')),
 	quote = FALSE,
-	append = TRUE,
+	append = FALSE,
 	row.names = FALSE,
 	col.names = FALSE,
 	sep = '\t')
