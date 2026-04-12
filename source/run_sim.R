@@ -25,7 +25,6 @@ if(length(args)==0) {
 # library()
 
 
-
 ###############################################################
 ## SOURCE FUNCTIONS
 ###############################################################
@@ -54,6 +53,8 @@ set.seed(seed)
 ###############################################################
 # SIMULATE DATA
 ###############################################################
+print('Simulating data.')
+
 # dataframe includes y and true c 
 y_dat <- simulate_data(n, mu_true = mu_true, pi_true = pi_true, sigma2 = sigma2)
 
@@ -69,13 +70,14 @@ y <- y_dat$y
 # FIT
 ###############################################################
 # Gibbs sampler
-
+print('Running Gibbs Sampler.')
 gibbs_time <- func_time(
 	gibbs_res <- gibbs_chain(y, K, sigma2, n_iter = 10000, burnin = 2000)
 	)
 gibbs_res$time <- gibbs_time
 
 # CAVI
+print('Running CAVI.')
 cavi_time <- func_time(
 	cavi_res <- cavi_model(y, K, sigma2, mu_star = NULL, sigma2_star = NULL, tol = 1e-6, max_iter = 500)
 	)
@@ -84,6 +86,8 @@ cavi_res$time <- cavi_time
 ###############################################################
 # OUTPUT
 ###############################################################
+
+print('Saving output.')
 
 # output all method output
 save(true_dat, gibbs_res, cavi_res, 

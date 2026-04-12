@@ -89,3 +89,5 @@ cavi_model <- function(y, K, sigma2, mu_star = NULL, sigma2_star = NULL, tol = 1
 
 
 
+
+
