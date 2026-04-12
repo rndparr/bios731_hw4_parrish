@@ -101,6 +101,12 @@ colnames(out) <- c('i', 'n', 'method', 'time', mu_cols, mu_ci_cols)
 
 out[, c('time', mu_cols, mu_ci_cols)] <- mapply(as.numeric, out[, c('time', mu_cols, mu_ci_cols)])
 
+# bias
+for (k in 1:K){
+	out[[paste0('mu_', k, '_bias')]] <-  out[[paste0('mu_', k)]] - mu_true[k]
+}
+
+# coverage
 for (k in 1:K){
 	out[[paste0('mu_', k, '_coverage')]] <- (mu_true[k] >= out[[paste0('mu_', k, '_ci_l')]]) & (mu_true[k] <= out[[paste0('mu_', k, '_ci_u')]])
 }
