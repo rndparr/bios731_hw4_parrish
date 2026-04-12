@@ -7,7 +7,7 @@
 # script assumes working directory is --chdir=/full/path/to/bios731_hw4_parrish/logs
 
 # load R
-module load R
+module load R/4.5.2
 
 # output file for sample size n sims
 sim_n_out_file=../sim/sim_n${n}.txt
@@ -23,5 +23,5 @@ fi
 Rscript ../source/run_sim.R ${SLURM_ARRAY_TASK_ID} ${n}
 
 # unload R
-module unload R
+module unload R/4.5.2
 
