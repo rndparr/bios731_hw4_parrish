@@ -96,7 +96,7 @@ save(true_dat, gibbs_res, cavi_res,
 
 # output results data
 out <- rbind(
-	rbind(c(i, n, 'true', NA, mu_true)), # true values
+	# rbind(c(i, n, 'true', NA, mu_true)), # true values
 	rbind(c(i, n, 'gibbs', gibbs_time, gibbs_res$mu_est)), # Gibbs values
 	rbind(c(i, n, 'cavi', cavi_time, cavi_res$mu_est)) # CAVI values
 	)
