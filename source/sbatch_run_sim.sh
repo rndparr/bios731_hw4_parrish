@@ -15,8 +15,8 @@ sim_n_out_file=../sim/sim_n${n}.txt
 # if output file does not exist, make empty file with columns
 if [ ! -f "${sim_n_out_file}" ]; then
 	mkdir -p ../sim/sim_data
-	R -e "n="${n}"; write.table(
-		rbind(c('i', 'n', 'method', 'time', paste0('mu_', 1:4), paste0('c_', 1:n))), 
+	Rscript -e "n="${n}"; write.table(
+		rbind(c('i', 'n', 'method', 'time', paste0('mu_', 1:4), paste0('c_', 1:n) ) ), 
 		here::here('sim', paste0('sim_n', n, '.txt')), 
 		quote=FALSE, append=FALSE, row.names=FALSE, col.names=FALSE, sep='\t'); q('no')"
 fi
