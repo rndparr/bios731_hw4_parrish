@@ -17,6 +17,7 @@ if(length(args) == 0) {
 	n <- as.integer(args[[2]])
 }
 
+print(sessionInfo())
 
 ###############################################################
 ## LOAD LIBRARIES
