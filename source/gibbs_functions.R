@@ -1,4 +1,7 @@
 
+
+
+
 ### SAMPLE CLUSTER
 sample_cluster <- function(y, mu) {
 	K <- length(mu)
@@ -40,6 +43,8 @@ sample_mu <- function(y, c, K, sigma2) {
 	mu_sample <- sapply(1:K, 
 		function(k){ rnorm(1, mu_star[k], sqrt(sigma2_star[k])) } )
 
+	mu_sample <- sort(mu_sample)
+
 	return(mu_sample)
 }
 
@@ -67,15 +72,29 @@ gibbs_chain <- function(y, K, sigma2, n_iter = 10000, burnin = 2000) {
 	}
 
 	# get estimates (sans burnin samples)
-	mu_est <- mu[iter, ]
-	c_est <- c[iter, ]
+	mu_est <- colMeans(mu[(burnin + 2):n_iter, ])
+	c_est <- apply(c[(burnin + 2):n_iter, ], 2, function(x){ which.max(tabulate(x)) })
 
 	# fix order (mu small to large)
-	out <- reorder_mu_c(mu_est, c_est)
+	# out <- reorder_mu_c(mu_est, c_est)
 
-	return(list(mu = mu, c = c, mu_est = out$mu_est, c_est = out$c_est, ind_fix = out$ind, burnin = burnin - 1))
+	# return(list(mu = mu, c = c, mu_est = out$mu_est, c_est = out$c_est, ind_fix = out$ind, burnin = burnin - 1))
+
+	return(list(mu = mu, c = c, mu_est = mu_est, c_est = c_est, burnin = burnin - 1))
 }
 
+
+timed_gibbs_chain <- function(y, K, sigma2, n_iter = 10000, burnin = 2000) {
+	# run chain, timed
+	gibbs_time <- func_time(
+		chain_res <- gibbs_chain(y, K, sigma2, n_iter = n_iter, burnin = burnin)
+		)
+
+	# add time to output
+	chain_res$time <- gibbs_time
+
+	return(chain_res)
+}
 
 
 ## GIBBS SAMPLER-MULTIPLE CHAINS
@@ -83,11 +102,13 @@ gibbs_multi_chain <- function(y, K, sigma2, n_chains = 4, n_iter = 10000, burnin
 
 	# replicate gibbs_chain n_chains times
 	res <- setNames(
-		replicate(n_chains, gibbs_chain(y, K, sigma2, n_iter = n_iter, burnin = burnin), simplify=FALSE), 
+		replicate(n_chains, timed_gibbs_chain(y, K, sigma2, n_iter = n_iter, burnin = burnin), simplify=FALSE), 
 		paste0('chain_', 1:n_chains))
+
+	# summary
+	res[['mu_est']] <- sapply(1:4, function(j) { res[[paste0('chain_', j)]]$mu_est }) |> rowMeans()
 
 	return(res)
 }
-
 
 

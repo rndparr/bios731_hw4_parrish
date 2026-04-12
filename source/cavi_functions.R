@@ -16,6 +16,8 @@ get_elbo <- function(y, pi_i, mu_star, sigma2_star, sigma2) {
 
 ## GET PI_I
 get_pi_i <- function(y, mu_star, sigma2_star) {
+	n <- length(y)
+
 	# initial log pi_i value
 	log_pi_i <- ( outer(y, mu_star) - 0.5 * outer(rep(1, n), mu_star^2 + sigma2_star))
 
@@ -78,7 +80,6 @@ cavi_model <- function(y, K, sigma2, mu_star = NULL, sigma2_star = NULL, tol = 1
 
 	# cluster estimate set to cluster with highest prob
 	c_est <- apply(pi_i, 1,  which.max)
-
 
 	# fix order (mu small to large)
 	out <- reorder_mu_c(mu_star, c_est)
