@@ -18,7 +18,7 @@ if [ ! -f "${sim_n_out_file}" ]; then
 	R -e "n="${n}"; write.table(
 		rbind(c('i', 'n', 'method', 'time', paste0('mu_', 1:4), paste0('c_', 1:n))), 
 		here::here('sim', paste0('sim_n', n, '.txt')), 
-		quote=FALSE, append=FALSE, row.names=FALSE, col.names=FALSE, sep='\t')"
+		quote=FALSE, append=FALSE, row.names=FALSE, col.names=FALSE, sep='\t'); q('no')"
 fi
 
 # from ${pdir}/logs, run the run_sim.R script
