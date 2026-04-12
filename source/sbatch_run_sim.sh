@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --array=1:500%100
+#SBATCH --array=1-500%100
 #SBATCH --nodes=1 # number of nodes
 
 ############################
