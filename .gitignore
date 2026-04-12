@@ -1,0 +1,5 @@
+./data/*.Rds
+./data/*.Rda
+.DS_Store
+./analysis/HW4_final_report_cache
+.Rproj.user
