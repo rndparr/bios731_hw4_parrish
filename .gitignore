@@ -1,7 +1,10 @@
-./data/*.Rds
-./data/*.Rda
+/data/*.Rds
+/data/*.Rda
 .DS_Store
-./analysis/HW4_final_report_cache
+/analysis/HW4_final_report_cache
 .Rproj.user
-!./sim/sim_data/sim_n*_1.Rds
-!/sim/sim_data/sim_n*_1.Rds
+sim/sim_data/*
+!sim/sim_data/sim_n100_1.Rds
+!sim/sim_data/sim_n1000_1.Rds
+!sim/sim_data/sim_n10000_1.Rds
+
