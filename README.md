@@ -64,7 +64,7 @@ script=${pdir}/source/sbatch_run_sim.sh
 # submit array job for each n
 for n in 100 1000 10000; do
 	# submission command
-	submission_command='sbatch --job-name=sim_n'${n}' --export=ALL,n='${n}' --chdir='${pdir}'/logs --output='${pdir}'/logs/%x_%A_%a.out --error='${pdir}'/logs/%x_%A_%a.err '${script}
+	submission_command='sbatch --job-name=n'${n}'_sim --export=ALL,n='${n}' --chdir='${pdir}'/logs --output='${pdir}'/logs/%x_%A_%a.out --error='${pdir}'/logs/%x_%A_%a.err '${script}
 
 	# print full command
 	echo ${submission_command}
@@ -90,7 +90,7 @@ for n in 100 1000 10000; do
 
 	# loop through simulations
 	for i in {1..500}; do
-		cat ./sim/sim_data/sim_n${n}_i${i}.txt >> ./sim/sim_n${n}.txt
+		cat ./sim/sim_out/sim_n${n}_i${i}.txt >> ./sim/sim_n${n}.txt
 	done
 
 done

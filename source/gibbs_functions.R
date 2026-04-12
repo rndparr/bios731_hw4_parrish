@@ -106,6 +106,7 @@ gibbs_multi_chain <- function(y, K, sigma2, n_chains = 4, n_iter = 10000, burnin
 		paste0('chain_', 1:n_chains))
 
 	# summary
+	res[['burnin']] <- burnin
 	res[['mu_est']] <- sapply(1:4, function(j) { res[[paste0('chain_', j)]]$mu_est }) |> rowMeans()
 
 	return(res)
