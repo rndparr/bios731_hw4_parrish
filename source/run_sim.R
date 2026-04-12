@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+
 
 ###############################################################
 ## PARSE ARGUMENTS
@@ -10,7 +10,7 @@ args=(commandArgs(TRUE))
 cat(paste0('\nargs:\n'))
 print(args)
 cat()
-if(length(args)==0) {
+if(length(args) == 0) {
 	stop('Error: No arguments supplied!')
 } else  {
 	i <- as.integer(args[[1]])
@@ -28,6 +28,7 @@ if(length(args)==0) {
 ###############################################################
 ## SOURCE FUNCTIONS
 ###############################################################
+print('Importing source scripts.')
 source(here::here('source', 'utility.R'))
 source(here::here('source', 'simulate_data.R'))
 source(here::here('source', 'gibbs_functions.R'))
@@ -112,11 +113,11 @@ colnames(out) <- c('i', 'n', 'method', 'time', mu_cols)
 write.table(
 	out,
 	here::here('sim', paste0('sim_n', n, '.txt')),
-	quote=FALSE,
-	append=TRUE,
-	row.names=FALSE,
-	col.names=FALSE,
-	sep='\t')
+	quote = FALSE,
+	append = TRUE,
+	row.names = FALSE,
+	col.names = FALSE,
+	sep = '\t')
 
 
 
