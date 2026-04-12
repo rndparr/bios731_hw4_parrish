@@ -15,7 +15,6 @@ sim_n_out_file=../sim/sim_n${n}.txt
 # if output file does not exist, make empty file with columns
 if [ ! -f "${sim_n_out_file}" ]; then
 	mkdir -p ../sim/sim_data
-	mkdir -p ../sim/sim_out
 	echo -e 'i\tn\tmethod\ttime\tmu_1\tmu_2\tmu_3\tmu_4' > ../sim/sim_n${n}.txt
 fi
 
