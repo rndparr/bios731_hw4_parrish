@@ -75,12 +75,16 @@ gibbs_chain <- function(y, K, sigma2, n_iter = 10000, burnin = 2000) {
 	mu_est <- colMeans(mu[(burnin + 2):n_iter, ])
 	c_est <- apply(c[(burnin + 2):n_iter, ], 2, function(x){ which.max(tabulate(x)) })
 
+	# confidence intervals
+	mu_ci_l <- apply(mu[(burnin + 2):n_iter, ], 2, quantile, probs = 0.025)
+	mu_ci_u <- apply(mu[(burnin + 2):n_iter, ], 2, quantile, probs = 0.975)
+
 	# fix order (mu small to large)
 	# out <- reorder_mu_c(mu_est, c_est)
 
 	# return(list(mu = mu, c = c, mu_est = out$mu_est, c_est = out$c_est, ind_fix = out$ind, burnin = burnin - 1))
 
-	return(list(mu = mu, c = c, mu_est = mu_est, c_est = c_est, burnin = burnin - 1))
+	return(list(mu = mu, c = c, mu_est = mu_est, mu_ci_l = mu_ci_l, mu_ci_u = mu_ci_u, c_est = c_est, burnin = burnin - 1))
 }
 
 
@@ -107,7 +111,7 @@ gibbs_multi_chain <- function(y, K, sigma2, n_chains = 4, n_iter = 10000, burnin
 
 	# summary
 	res[['burnin']] <- burnin
-	res[['mu_est']] <- sapply(1:4, function(j) { res[[paste0('chain_', j)]]$mu_est }) |> rowMeans()
+	res[['mu_est']] <- sapply(1:n_chains, function(j) { res[[paste0('chain_', j)]]$mu_est }) |> rowMeans()
 
 	return(res)
 }

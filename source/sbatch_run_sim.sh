@@ -16,7 +16,7 @@ sim_n_out_file=../sim/sim_n${n}.txt
 if [ ! -f "${sim_n_out_file}" ]; then
 	mkdir -p ../sim/sim_data
 	mkdir -p ../sim/sim_out
-	echo -e 'i\tn\tmethod\ttime\tmu_1\tmu_2\tmu_3\tmu_4' > ../sim/sim_n${n}.txt
+	echo -e 'i\tn\tmethod\ttime\tmu_1\tmu_2\tmu_3\tmu_4\tmu_1_ci_l\tmu_2_ci_l\tmu_3_ci_l\tmu_4_ci_l\tmu_1_ci_u\tmu_2_ci_u\tmu_3_ci_u\tmu_4_ci_u\tmu_1_coverage\tmu_2_coverage\tmu_3_coverage\tmu_4_coverage\tcoverage' > ../sim/sim_n${n}.txt
 fi
 
 # from ${pdir}/logs, run the run_sim.R script

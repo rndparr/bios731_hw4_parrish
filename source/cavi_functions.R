@@ -84,7 +84,11 @@ cavi_model <- function(y, K, sigma2, mu_star = NULL, sigma2_star = NULL, tol = 1
 	# fix order (mu small to large)
 	out <- reorder_mu_c(mu_star, c_est)
 
-	return(list(mu_est = out$mu_est, c_est = out$c_est, elbo = elbo, n_iter = length(elbo) - 1, converged = converged))
+	# confidence intervals
+	mu_ci_l <- out$mu_est - 1.96 * sqrt(sigma2_star)
+	mu_ci_u <- out$mu_est + 1.96 * sqrt(sigma2_star)
+
+	return(list(mu_est = out$mu_est, mu_ci_l = mu_ci_l, mu_ci_u = mu_ci_u, sigma2_est = sigma2_star, c_est = out$c_est, elbo = elbo, n_iter = length(elbo) - 1, converged = converged))
 }
 
 

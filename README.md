@@ -28,15 +28,14 @@
 
 ### Required R packages (local)
 
+- coda
 - ggplot2
 - here
 - kableExtra
 - knitr
-- matlib
-- survival
 
 ```R
-install.packages(c("ggplot2", "here", "kableExtra", "knitr", "matlib", "survival"))
+install.packages(c("coda", "ggplot2", "here", "kableExtra", "knitr"))
 ```
 
 ### Required R packages (cluster)

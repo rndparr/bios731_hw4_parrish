@@ -40,6 +40,7 @@ sigma2 <- 1
 n_chain <- 4
 
 mu_cols <- c(paste0('mu_', 1:4))
+mu_ci_cols <- c(paste0('mu_', 1:4, '_ci_l'), paste0('mu_', 1:4, '_ci_u'))
 mu_c_cols <- c(mu_cols, paste0('c_', 1:n))
 
 # set seed
@@ -92,10 +93,20 @@ save(true_dat, gibbs_res, cavi_res,
 # output results data
 out <- rbind(
 	# rbind(c(i, n, 'true', NA, mu_true)), # true values
-	rbind(c(i, n, 'gibbs', gibbs_time, gibbs_res$mu_est)), # Gibbs values
-	rbind(c(i, n, 'cavi', cavi_time, cavi_res$mu_est)) # CAVI values
+	rbind(c(i, n, 'gibbs', gibbs_time, gibbs_res$mu_est, gibbs_res$mu_ci_l, gibbs_res$mu_ci_u)), # Gibbs values
+	rbind(c(i, n, 'cavi', cavi_time, cavi_res$mu_est, cavi_res$mu_ci_l, cavi_res$mu_ci_u)) # CAVI values
 	)
-colnames(out) <- c('i', 'n', 'method', 'time', mu_cols)
+out <- as.data.frame(out)
+colnames(out) <- c('i', 'n', 'method', 'time', mu_cols, mu_ci_cols)
+
+out[, c('time', mu_cols, mu_ci_cols)] <- mapply(as.numeric, out[, c('time', mu_cols, mu_ci_cols)])
+
+for (k in 1:K){
+	out[[paste0('mu_', k, '_coverage')]] <- (mu_true[k] >= out[[paste0('mu_', k, '_ci_l')]]) & (mu_true[k] <= out[[paste0('mu_', k, '_ci_u')]])
+}
+
+# entire mu vector covered
+out[['coverage']] <- apply(out[, paste0('mu_', 1:4, '_coverage')], 1, all)
 
 # out <- rbind(
 # 	rbind(c(i, n, 'true', NA, mu_true, y_dat$c)), # true values
