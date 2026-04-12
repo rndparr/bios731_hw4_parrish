@@ -3,3 +3,5 @@
 .DS_Store
 ./analysis/HW4_final_report_cache
 .Rproj.user
+!./sim/sim_data/sim_n*_1.Rds
+!/sim/sim_data/sim_n*_1.Rds
