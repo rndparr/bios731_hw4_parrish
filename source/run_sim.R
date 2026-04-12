@@ -44,7 +44,8 @@ pi_true <- rep(0.25, 4)
 sigma2 <- 1
 n_chain <- 4
 
-mu_c_cols <- c(paste0('mu_', 1:4), paste0('c_', 1:n))
+mu_cols <- c(paste0('mu_', 1:4))
+mu_c_cols <- c(mu_cols, paste0('c_', 1:n))
 
 # set seed
 seed <- 041126 + n + i
@@ -90,11 +91,18 @@ save(true_dat, gibbs_res, cavi_res,
 
 # output results data
 out <- rbind(
-	rbind(c(i, n, 'true', NA, mu_true, y_dat$c)), # true values
-	rbind(c(i, n, 'gibbs', gibbs_time, gibbs_res$mu_est, gibbs_res$c_est)), # Gibbs values
-	rbind(c(i, n, 'cavi', cavi_time, cavi_res$mu_est, cavi_res$c_est)) # CAVI values
+	rbind(c(i, n, 'true', NA, mu_true)), # true values
+	rbind(c(i, n, 'gibbs', gibbs_time, gibbs_res$mu_est)), # Gibbs values
+	rbind(c(i, n, 'cavi', cavi_time, cavi_res$mu_est)) # CAVI values
 	)
-colnames(out) <- c('i', 'n', 'method', 'time', mu_c_cols)
+colnames(out) <- c('i', 'n', 'method', 'time', mu_cols)
+
+# out <- rbind(
+# 	rbind(c(i, n, 'true', NA, mu_true, y_dat$c)), # true values
+# 	rbind(c(i, n, 'gibbs', gibbs_time, gibbs_res$mu_est, gibbs_res$c_est)), # Gibbs values
+# 	rbind(c(i, n, 'cavi', cavi_time, cavi_res$mu_est, cavi_res$c_est)) # CAVI values
+# 	)
+# colnames(out) <- c('i', 'n', 'method', 'time', mu_c_cols)
 
 # append to dataframe
 write.table(
@@ -105,8 +113,6 @@ write.table(
 	row.names=FALSE,
 	col.names=FALSE,
 	sep='\t')
-
-
 
 
 
