@@ -132,12 +132,10 @@ Once results are finished, concatenate the estimates results using:
 ```bash
 # loop over sample sizes
 for n in 100 1000 10000; do
-
 	# loop through simulations
 	for i in {1..500}; do
 		cat ./sim/sim_out/sim_n${n}_i${i}.txt >> ./sim/sim_n${n}.txt
 	done
-
 done
 ```
 

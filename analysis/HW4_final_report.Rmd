@@ -1,0 +1,651 @@
+---
+title: "BIOS 731: HW4"
+author: "Randy Parrish"
+date: "`r Sys.Date()`"
+format:
+  pdf
+output:
+  pdf_document:
+    includes:
+      in_header: "preamble.tex"
+execute:
+  echo: true
+  warning: false
+  message: false  
+---
+
+
+```{r, setup, include = FALSE}
+knitr::opts_chunk$set(
+  #echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  dev = 'pdf',
+  fig.width = 6,
+  fig.height = 5,
+  fig.path = '../results/',
+  fig.pos = 'H', 
+  fig.align = 'center',
+  out.extra = '',
+  # fig.topcaption = TRUE,
+  #fig.cap = '',
+  cache = FALSE
+)
+
+# libraries
+library(coda)
+library(here)
+library(kableExtra) # make tables
+library(ggplot2)
+
+
+# set plot theme to use for all plots
+plot_theme <- theme_bw() + 
+	theme(legend.position='bottom',
+		legend.margin=margin(0, 0, 0, 0))
+theme_set(plot_theme)
+
+
+# function to make the table from a data frame
+report_table <- function(data, 
+  w = NULL, h = '300px', ec = 'margin: 15px;', 
+  rownames = FALSE, header = NULL, ...)
+{
+
+  # create table object
+  tbl <- kbl(data, 
+    row.names = rownames,
+    booktabs=TRUE,
+    ...)
+
+  # add header_above
+  if (!is.null(header)) {
+    tbl <- add_header_above(tbl, header=header, escape=FALSE)
+  } 
+
+  # create the pdf table
+  tbl <- kable_paper(
+    kable_styling(tbl, 
+      position = 'center',
+      fixed_thead = T,
+      latex_options = c('striped', 'hold_position','scale_down'))
+  )
+
+  # return the table
+  tbl
+}
+
+```
+
+
+---
+
+## Problem 0
+
+GitHub Repo: [https://github.com/rndparr/bios731_hw4_parrish](https://github.com/rndparr/bios731_hw4_parrish)
+
+
+
+### Bayesian K-Mixture Model
+
+We consider a Bayesian Mixture Model  of unit-variance univariate Gaussians. There are:
+
+- $K$ mixture components, corresponding to $K$ Gaussian distributions with means $\vmu = \{\mu_1,\ldots,\mu_K\}$
+- cluster assignments $c_i \in \{1,\dots,n\}$ 
+- observations $y_i \in \{1,\dots,n\}$
+
+
+Data generating model is
+<!-- 
+\begin{align*}
+\mu &\sim N(0, \sigma^2)\\
+c_i &\sim Categorical(1/K. \ldots, 1/K)\\
+y_i|c_i, \mu &\sim N(c_i^T\vmu, 1)
+\end{align*} -->
+
+\begin{align*}
+\mu &\sim N(0, \sigma^2) \\
+c_i &\sim \textnormal{Categorical}(1/K. \ldots, 1/K) \\
+% \vec{c}_i&=\lrb{c_{ik}}_{K \times 1}=\lrb{I(c_i=k)} \\
+y_i|c_i, \vmu &\sim N(\vec{c}_i^T\vmu, 1), \hspace{4em} \vec{c}_i=\lrb{c_{ik}}_{K \times 1}=\lrb{I(c_i=k)}_{K \times 1}
+\end{align*}
+
+---
+
+## Problem 1: Gibbs sampler derivations and implementation
+<!-- 
+Derive a Gibb's sampler for the posterior distribution, $p(\vmu, \vec{c}|\vec{y})$.
+Show the derivations and resulting Gibb's sampler updates.  Specifically, derive:
+
+- $p(c_i|y_i, \vmu)$
+- $p(\mu_k|\vec{y}, \vec{c})$
+
+ -->
+### Posterior distribution of cluster assignments
+$$\begin{aligned}
+p(c_i=k|y_i,\vmu) &= \frac{ p(y_i|c_i=k,\vmu)}{p(y_i|\vmu)} \; p(c_i=k) \\
+	&=  \frac{ p(y_i|c_i=k,\vmu)}{ \sum_{j=1}^K p(y_i|c_i=j,\vmu) p(c_i=j)} \; p(c_i=k) \\
+	&= \frac{\exp\!\lrbr{-\frac{1}{2}(y_i-\mu_k)^2}}{\sum_{j=1}^K \exp\!\lrbr{-\frac{1}{2}(y_i-\mu_j)^2}  \frac{1}{K}}  \frac{1}{K} \\
+	&= \frac{\exp\!\lrbr{-\frac{1}{2}(y_i-\mu_k)^2}}{\sum_{j=1}^K \exp\!\lrbr{-\frac{1}{2}(y_i-\mu_j)^2} } \\
+	&= \pi_{ik} \\
+c_i|y_i,\vmu	&\sim \textnormal{Categorical}(\pi_{i1},\ldots,\pi_{iK})=\textnormal{Categorical}(\vpi_{i})
+\end{aligned}$$
+
+
+### Posterior distribution of cluster means
+
+First, let $n_k$ be the number of $c_i$ such that $c_i=k$. 
+
+$$\begin{aligned}
+p(\mu_k |\vec{y},\vec{c}) &\propto p(\mu_k) \prod_{i:c_i=k} p(y_i|c_i,\mu_k) \\
+	&= \exp\!\lrbr{-\frac{\mu_k^2}{2\sigma^2}} \prod_{i:c_i=k} \exp\!\lrbr{-\frac{1}{2}(y_i-\mu_k)^2} \\
+	&= \exp\!\lrbr{-\frac{\mu_k^2}{2\sigma^2}} \exp\!\lrbr{\sum_{i:c_i=k} -\frac{1}{2}(y_i-\mu_k)^2} \\
+	&= \exp\!\lrbr{ -\frac{1}{2} \lrp{\frac{\mu_k^2}{\sigma^2} + \sum_{i:c_i=k} (y_i-\mu_k)^2}  } \\
+	&= \exp\!\lrbr{ -\frac{ \frac{1}{\sigma^2}+n_k }{2 } \lrp{ \mu_k -  \frac{1}{\frac{1}{\sigma^2}+n_k} \sum _{i:c_i=k} y_i  }^2     } \\
+\mu_k |\vec{y},\vec{c} &\sim \N{\mu_k^\ast,\sigma_k^{\ast2}} \qquad 
+ \sigma_k^{\ast2} = \lrp{\frac{1}{\sigma^2}+n_k}\inv \qquad 
+	\mu_k^\ast = \sigma_k^{\ast2} \sum_{i:c_i=k} y_i
+\end{aligned}$$
+
+
+
+
+
+<!-- 
+% $$\begin{aligned}
+% p(c_i=k|y_i,\vmu) &\propto p(y_i|c_i=k,\vmu) \; p(c_i=k) \\
+% 	&= \exp\!\lrbr{-\frac{1}{2}(y_i-\mu_k)^2} \frac{1}{K} \\
+% \end{aligned}$$
+
+% So $p(c_i=k|y_i,\vmu) \propto \exp\!\lrbr{-\frac{1}{2}(y_i-\mu_k)^2}$. 
+ -->
+<!-- 
+% $$\begin{aligned}
+% p(\vmu, \vec{c}, \vec{y}) &= p(\vmu) \prod_{i=1}^n \sum_{c_i} p(c_i)p(y_i|c_i,\vmu) \; d\vmu \\
+% 	&= \sum_{\vec{c}} p(\vec{c}) \int p(\vmu) \prod_{i=1}^n p(y_i|c_i,\vmu) \; d\vmu  \\
+% p(y_i|c_i,\vmu) &= \prod_{k=1}^K p(y_i|\mu_k)^{c_{ik}} \\
+% p(c_i|y_i, \vmu) &= \\
+% p(\mu_k|\vec{y}, \vec{c}) &= \\
+% p(\vmu,\vec{c}|\vec{y}) &= \frac{ \prod_k p(\mu_k) \prod_i p(c_i) p(y_i|c_i,\vmu) }{\int_{\vmu} \sum_{\vec{c}} \prod_{k} p(\mu_k) \prod_i p(c_i)p(y_i|c_i,\vec{\mu}) }
+% \end{aligned}$$
+
+ -->
+<!-- 
+Implement the Gibb's sampler in R. Your Gibb's R function should
+
+- run the sampler
+- store posterior draws
+- return posterior summaries (estimates of the cluster assignments and means).
+
+ -->
+---
+
+
+## Problem 2: Variational inference derivations
+
+<!-- Assume a mean‑field approximation. Derive a CAVI algorithm for the posterior distribution, $p(\mu, \textbf{x}|y)$. Show explicit derivations and resulting updates. Implement the algorithm in R. You may refer to [Blei, 2017](https://www.tandfonline.com/doi/full/10.1080/01621459.2017.1285773) for details.
+
+Your variational inference R function should
+
+- monitor convergence using the ELBO
+- return final estimates of the cluster assignments and means -->
+
+### Mean-field variational approximation to the posterior distribution:
+
+
+#### Joint probability
+$$\begin{aligned}
+p(\vmu,\vec{c},\vec{y}) &= p(\vmu)\; p(\vec{c},\vec{y}) = p(\vmu)\prod_{i=1}^n p(c_i)\; p(y_i|c_i,\vmu) \\
+\log p(\vmu,\vec{c},\vec{y}) &= \sum_{k=1}^K \log p(\mu_k) + \sum_{i=1}^n \log p(c_i) + \sum_{i=1}^n p(y_i|c_i,\vmu) \\	
+	% &= \sum_{k=1}^K \lrbr{-\frac{1}{2} \log (2\pi\sigma^2) - \frac{\mu_k^2}{2\sigma^2}} + \sum_{i=1}^n \log \frac{1}{K} + \sum_{i=1}^n \lrbr{-\frac{1}{2} \log (2\pi) - \frac{(y_i-\mu_k^2)}{2}}  \\
+	&= \sum_{k=1}^K \lrbr{-\frac{1}{2} \log (2\pi\sigma^2) - \frac{\mu_k^2}{2\sigma^2}} - \sum_{i=1}^n \log(K) + \sum_{i=1}^n \lrbr{-\frac{1}{2} \log (2\pi) - \frac{(y_i-\mu_k)^2}{2}}  \\	
+\end{aligned}$$
+
+#### Mean-field approximation
+
+$$\begin{aligned}
+q(\vmu,\vec{c}) &= \prod_{k=1}^K q(\mu_k; \mu_k^\ast, \sigma_k^{\ast2}) \; \prod_{i=1}^n q(c_i; \vpi_{i})  \\
+q(\mu_k; \mu_k^\ast, \sigma_k^{\ast2}) &= \N{\mu_k^\ast,\sigma_k^{\ast2}} \\
+q(c_i; \vpi_{i}) &= \textnormal{Categorical}(\vpi_{i}), \qquad \sum_{k=1}^K \pi_{ik}=1
+\end{aligned}$$
+
+
+#### Update for cluster assignment
+$$\begin{aligned}
+% q^\ast(\mu_k; \mu_k^\ast, \sigma_k^{\ast2})
+q^\ast(c_i=k; \vpi_{i}) &\propto \exp\!\lrbr{\log p(c_i) + \ex{\log p(y_i|c_i,\vmu);\;\vmu^\ast,\vsigma^{\ast2}} }  \\
+	% &=  \exp\!\lrbr{ \ex{\log p(y_i|c_i,\vmu);\; \vpi_i,\vmu^\ast,\vsigma^{\ast2}}} + \textnormal{const.} \\
+	&= \exp\!\lrbr{ \ex{\log p(y_i|\mu_k);\; \mu_k^\ast, \sigma_k^{\ast2}} } + \textnormal{const.} \\
+	&= \exp\!\lrbr{\ex{ - \frac{(y_i-\mu_k)^2}{2};\; \mu_k^\ast, \sigma_k^{\ast2}}  } + \textnormal{const.} \\
+	&= \exp\!\lrbr{\ex{ -\frac{1}{2}y_i^2 \mu_ky_i -\frac{1}{2}\mu_k^2;\; \mu_k^\ast, \sigma_k^{\ast2}}  } + \textnormal{const.}  \\
+	&= \exp\!\lrbr{\ex{\mu_k y_i -\frac{1}{2}\mu_k^2;\; \mu_k^\ast, \sigma_k^{\ast2}}  } + \textnormal{const.} &\textnormal{\footnotesize (removed $y_i^2$ term, const. wrt $c_i$)} \\
+	&= \exp\!\lrbr{y_i \ex{\mu_k;\; \mu_k^\ast, \sigma_k^{\ast2}} -\frac{1}{2}\ex{\mu_k^2 ;\; \mu_k^\ast, \sigma_k^{\ast2}} } + \textnormal{const.} \\
+	&= \exp\!\lrbr{y_i \, \mu_k^\ast -\frac{1}{2}\lrp{\sigma_k^{\ast2} + \mu_k^{\ast2}} } + \textnormal{const.} \\[1em]
+	%
+\pi_{ik} %&\propto \exp\!\lrbr{y_i \ex{\mu_k;\; \mu_k^\ast, \sigma_k^{\ast2}} -\frac{1}{2}\ex{\mu_k^2 ;\; \mu_k^\ast, \sigma_k^{\ast2}}  } \\
+	&= \frac{\exp\!\lrbr{y_i \mu_k^\ast -\frac{1}{2}\lrp{\sigma_k^{\ast2} + \mu_k^{\ast2}}}}{\sum_{j=1}^K \exp\!\lrbr{y_i \mu_j^\ast -\frac{1}{2}\lrp{\sigma_j^{\ast2} + \mu_j^{\ast2}}}} &\textnormal{\footnotesize (normalized)} \\
+\end{aligned}$$
+
+
+<!-- 
+
+% $$\begin{aligned}
+% % q^\ast(\mu_k; \mu_k^\ast, \sigma_k^{\ast2})
+% q^\ast(\vec{c}_i; \vpi_{i}) &\propto \exp\!\lrbr{\log p(c_i) + \ex{\log p(y_i|c_i,\vmu);\;\vmu^\ast,\vsigma^{\ast2}} }  \\
+% 	&=  \exp\!\lrbr{ \ex{\log p(y_i|c_i,\vmu);\; \vpi_i,\vmu^\ast,\vsigma^{\ast2}}} + \textnormal{const.} \\
+% 	&=  \exp\!\lrbr{ \ex{\log p(y_i|c_i,\vmu);\; \vpi_i,\vmu^\ast,\vsigma^{\ast2}}} + \textnormal{const.} \\
+% 	&= \exp\!\lrbr{ \sum_{k=1}^K c_{ik}\, \ex{\log p(y_i|\mu_k);\; \mu_k^\ast, \sigma_k^{\ast2}} } + \textnormal{const.} \\
+% 	&= \exp\!\lrbr{\sum_{k=1}^K c_{ik}\, \ex{ - \frac{(y_i-\mu_k)^2}{2};\; \mu_k^\ast, \sigma_k^{\ast2}}  } + \textnormal{const.} \\
+% 	&= \exp\!\lrbr{\sum_{k=1}^K c_{ik}\, \ex{ -\frac{1}{2}y_i^2 \mu_ky_i -\frac{1}{2}\mu_k^2;\; \mu_k^\ast, \sigma_k^{\ast2}}  } + \textnormal{const.}  \\
+% 	&= \exp\!\lrbr{\sum_{k=1}^K c_{ik}\, \ex{\mu_k y_i -\frac{1}{2}\mu_k^2;\; \mu_k^\ast, \sigma_k^{\ast2}}  } + \textnormal{const.} &\textnormal{\footnotesize (removed $y_i^2$ term, const. wrt $c_i$)} \\
+% 	&= \exp\!\lrbr{\sum_{k=1}^K c_{ik}\, y_i \ex{\mu_k;\; \mu_k^\ast, \sigma_k^{\ast2}} -\frac{1}{2}\ex{\mu_k^2 ;\; \mu_k^\ast, \sigma_k^{\ast2}} } + \textnormal{const.} \\
+% 	&= \exp\!\lrbr{\sum_{k=1}^K c_{ik}\, y_i \, \mu_k^\ast -\frac{1}{2}\lrp{\sigma_k^{\ast2} + \mu_k^{\ast2}} } + \textnormal{const.} \\[1em]
+% 	%
+% \pi_{ik} %&\propto \exp\!\lrbr{y_i \ex{\mu_k;\; \mu_k^\ast, \sigma_k^{\ast2}} -\frac{1}{2}\ex{\mu_k^2 ;\; \mu_k^\ast, \sigma_k^{\ast2}}  } \\
+% 	&= \frac{\exp\!\lrbr{y_i \mu_k^\ast -\frac{1}{2}\lrp{\sigma_k^{\ast2} + \mu_k^{\ast2}}}}{\sum_{j=1}^K \exp\!\lrbr{y_i \mu_j^\ast -\frac{1}{2}\lrp{\sigma_j^{\ast2} + \mu_j^{\ast2}}}} %&\textnormal{\footnotesize (normalized)} \\
+% \end{aligned}$$
+
+ -->
+
+
+#### Update for cluster means
+
+$$\begin{aligned}
+q(\mu_k; \mu_k^\ast, \sigma_k^{\ast2}) &\propto \exp\!\lrbr{ \log p(\mu_k) \sum_{i=1}^n \ex{\log p(y_i|c_i,\vmu);\; \vpi_i, \vmu_{-k}^\ast, \vsigma_{-k}^{\ast2}}  }  \\
+	&= \exp\!\lrbr{ \mu_k\lrp{\sum_{i=1}^n \pi_{ik}y_i }- \mu_k^2\lrp{\frac{\sigma^2}{2} + \frac{1}{2}\sum_{i=1}^n \pi_{ik} } } + \textnormal{const.} \\
+\log q(\mu_k; \mu_k^\ast, \sigma_k^{\ast2}) &= \mu_k\lrp{\sum_{i=1}^n \pi_{ik}y_i }- \mu_k^2\lrp{\frac{\sigma^2}{2} + \frac{1}{2}\sum_{i=1}^n \pi_{ik}}  + \textnormal{const.}  \\
+0 &= \frac{\partial \log q(\mu_k; \mu_k^\ast, \sigma_k^{\ast2})}{\partial \mu_k} \\
+	&= \sum_{i=1}^n \pi_{ik}y_i - 2\mu_k\lrp{\frac{\sigma^2}{2} + \frac{1}{2}\sum_{i=1}^n \pi_{ik}} + \textnormal{const.} \\
+	&= \sum_{i=1}^n \pi_{ik}y_i - \mu_k\lrp{\sigma^2+\sum_{i=1}^n \pi_{ik}} + \textnormal{const.} \\[1em]
+\mu_k^\ast &= \hat{\mu}_k = \frac{\sum_{i=1}^n \pi_{ik}y_i}{\sigma^{-2} + \sum_{i=1}^n \pi_{ik}} \\
+\sigma_k^{\ast2} &= \hat{\sigma}_k^2 = \frac{1}{\sigma^{-2} + \sum_{i=1}^n \pi_{ik}}
+\end{aligned}$$
+
+
+
+
+
+
+
+---
+
+
+## Problem 3: Fit to data
+
+<!-- Implement the Gibb's sampler and variational inference updates in R.  Fit to the Old Faithful waiting times dataset used in the EM lecture.
+
+Compare computation times and estimates from variational bayes to mean parameter estimates from the Gibb's sampler.  For Gibb's sampler, also do diagnostic plots, fit multiple chains, comment on convergence and effective sample size.
+
+ -->
+
+```{r, problem3, cache = TRUE}
+# load scripts
+source(here('source', 'utility.R'))
+source(here('source', 'gibbs_functions.R'))
+source(here('source', 'cavi_functions.R'))
+
+# import data
+data(faithful)
+y <- faithful[['waiting']]
+
+# run Gibbs Sampler
+n_chains <- 4
+faithful_gibbs_time <- func_time(
+	gibbs_res <- gibbs_multi_chain(
+		y, K = 2, sigma2 = 1, 
+		n_chains = n_chains, n_iter = 5000, burnin = 1000)
+	)
+
+# run CAVI
+faithful_cavi_time <- func_time(
+	cavi_res <- cavi_model(
+		y, K = 2, sigma2 = 1, 
+		mu_star = NULL, sigma2_star = NULL, 
+		tol = 1e-5, max_iter = 1000)
+)
+```
+
+```{r, problem3_diag_autocorr, fig.cap = 'Autocorrelation Plots for Gibbs Sampler; each row represents one chain', fig.height = 9, echo = FALSE}
+# make mcmc object for coda plots
+gibbs_chains_mcmc <- lapply(1:n_chains, 
+	function (j) {
+		x <- mcmc(gibbs_res[[paste0('chain_', j)]]$mu[-(1:(gibbs_res$burnin + 1)), ]);
+		varnames(x) <- c('mu1', 'mu2');
+		return(x)
+	})
+gibbs_mcmc <- as.mcmc.list(gibbs_chains_mcmc)
+
+# auto-correlation plots
+par(mfrow = c(n_chains, 2), mar = c(4.25, 4, 1, 1))
+autocorr.plot(gibbs_mcmc, auto.layout = FALSE, col = '#F26430', lwd = 2)
+
+```
+
+
+```{r, problem3_diag_tracedensity, fig.cap = 'Trace, Density Plots for Gibbs Sampler', fig.height = 5, echo = FALSE}
+# trace and density plots
+par(mfrow = c(2, 2), mar = c(4.25, 4, 1, 1))
+plot(gibbs_mcmc, density = FALSE, auto.layout = FALSE)
+plot(gibbs_mcmc, trace = FALSE, auto.layout = FALSE, col = '#F26430', lwd = 2)
+
+```
+
+```{r, problem3_effsampsize, echo = FALSE}
+# effective sample size
+eff_samp_size <- as.data.frame(t(effectiveSize(gibbs_mcmc)))
+colnames(eff_samp_size) <- c('$\\mu_1$', '$\\mu_2$')
+
+report_table(eff_samp_size, 
+	caption = 'Effective Sample Size for Gibbs', 
+	escape = FALSE)
+```
+
+```{r, problem3_cavi_plot, fig.height = 3, echo = FALSE, fig.cap = 'CAVI Convergence'}
+# CAVI convergence plot
+elbo_dat <- data.frame(elbo = cavi_res$elbo)
+p <- ggplot(data = elbo_dat, 
+		aes(x = 1:nrow(elbo_dat), y = elbo, color = '#36908a')) + 
+	geom_point(size = 2) +
+	geom_line() +
+	scale_color_identity() +
+	labs(x = 'Iteration', y = 'ELBO')
+p
+```
+
+
+
+
+```{r, problem3_time, echo = FALSE}
+# computation time table data
+time_dat <- data.frame(
+	'CAVI' = faithful_cavi_time,
+	'Gibbs (total)' = faithful_gibbs_time,
+	check.names = FALSE
+	)
+
+time_dat[paste0('chain ', 1:4)] = sapply(1:4, 
+		function(j) { 
+			gibbs_res[[paste0('chain_', j)]]$time 
+		})
+
+# make time table
+report_table(time_dat, caption = 'Computation Time (Seconds) for Old Faithful Waiting Time Data')
+```
+
+
+
+```{r, problem3_estimates, fig.height = 4, echo = FALSE}
+# computation time
+est_dat <- t(data.frame(
+	'CAVI' = cavi_res$mu_est,
+	'Gibbs' = gibbs_res$mu_est,
+	check.names = FALSE
+	))
+colnames(est_dat) <- paste0('$\\hat{\\mu}_{', 1:2, '}$')
+
+# make estimate table
+report_table(est_dat, caption = 'Final Estimates of $\\vmu$', rownames = TRUE, escape = FALSE)
+```
+
+
+CAVI was substantially faster than Gibbs Sampling; CAVI took a fraction of a second whereas each Gibbs chain took around 5 seconds. CAVI converged very quickly for this data. Both yielded similar final estimates. The effective sample size for the Gibbs Sampler running for 10000 iterations and 4 chains was around 9.5k to 10.5k. 
+
+
+---
+
+
+## Problem 4: Perform a simulation study on the cluster
+
+
+<!-- 
+In our simulation, we want to 
+
+* Generate data from a 4-part Gaussian mixture model with true means $\mu = \{0, 5, 10, 20\}$ and unit variance.
+  * Evaluate estimation of $\mu$ through bias, coverage, and computation time
+  * We will compare the Gibbs sampler and Variational Bayes algorithms defined above
+  
+
+* Evaluate these properties at sample sizes $n =\{100, 1000, 10000\}$
+  - Use Gibbs chains of length 10000 and discard the first 2000 samples as burn in
+  - Use nsim = 500
+  
+
+We will execute this simulation study on the cluster. For full credit, make sure to implement the following:
+
+**Workflow:**
+* Use structured scripts and subfolders following guidance from the cluster computing project organization lecture
+* Instead of parallelizing your simulation scenarios (as in HW1), each simulation scenario should be assigned a different JOBID on the cluster.
+
+
+**Presenting results:**
+
+Create plots with *Monte Carlo standard error bars* to summarize the following:
+
+- Bias of $\hat{\mu}$
+- Coverage of $\hat{\mu}$
+
+
+Write 1-2 paragraphs summarizing these results.
+ -->
+
+
+```{r, problem4, echo = FALSE}
+## read in data
+paths <- here::here('sim', paste0('sim_n', c(100, 1000, 10000), '.txt'))
+
+# combine data for all n values
+dat <- data.frame()
+for (path in paths) {
+	dat <- rbind(dat, read.csv(path, sep = '\t', header = TRUE))
+}
+```
+
+
+```{r, problem4_time, fig.cap = 'Computation time for simulation.', fig.height = 4, echo = FALSE}
+# set up data frame for plot
+time_dat <- reshape2::melt(dat, 
+	id.vars = c('i', 'n', 'method'), 
+	measure.vars = 'time', value.name = 'time')
+time_dat$n <- as.factor(time_dat$n)
+time_dat$method <- factor(time_dat$method, 
+	levels = c('gibbs', 'cavi'), 
+	labels = c('Gibbs', 'CAVI'))
+
+time_box_plot <- ggplot(data = time_dat, 
+		aes(x = n, y = time, color = method)) +
+	geom_hline(yintercept = 0, linetype = 2, color = 'black') +
+	geom_boxplot() +
+	labs(y = 'Time (seconds)') +
+	scale_color_manual(name = 'Method', 
+		values = c('#F26430','#36908A'),
+		breaks = c('Gibbs', 'CAVI'))
+
+time_box_plot
+
+# get mean time
+time_dat_mean <- aggregate(time ~ n + method, 
+	data = time_dat, mean)
+time_dat_mean <- reshape2::dcast(time_dat_mean, n ~ method, value.var = 'time')
+colnames(time_dat_mean)[2:3] <- paste0(colnames(time_dat_mean)[2:3], '_mean')
+
+# get sd of time
+time_dat_sd <- aggregate(time ~ n + method, 
+	data = time_dat, sd)
+time_dat_sd <- reshape2::dcast(time_dat_sd, n ~ method, value.var = 'time')
+colnames(time_dat_sd)[2:3] <- paste0(colnames(time_dat_sd)[2:3], '_sd')
+
+# merge mean and sd data
+time_table_dat <- merge(time_dat_mean, time_dat_sd, 
+	by = 'n')
+time_table_dat$n <- as.factor(time_table_dat$n)
+
+time_table_dat$CAVI <- paste(round(time_table_dat$CAVI_mean, 3), '$\\pm$', round(time_table_dat$CAVI_sd, 3))
+time_table_dat$Gibbs <- paste(round(time_table_dat$Gibbs_mean, 3), '$\\pm$', round(time_table_dat$Gibbs_sd, 3))
+time_table_dat <- time_table_dat[, c('n', 'Gibbs', 'CAVI')]
+# time_table_dat <- time_table_dat[, c('n', 'cavi_mean', 'cavi_sd', 'gibbs_mean', 'gibbs_sd')]
+colnames(time_table_dat) <- c('n', 'Gibbs', 'CAVI')
+
+report_table(time_table_dat, escape = FALSE,
+	caption = 'Computation Time (seconds) (Mean $\\pm$ SD)')
+```
+
+
+
+```{r, problem4_bias, fig.cap = 'Bias for each $\\hat{\\mu}_k$.', echo = FALSE}
+# set up data frame for plot
+bias_dat <- reshape2::melt(dat, 
+	id.vars = c('i', 'n', 'method'), 
+	measure.vars = paste0('mu_', 1:4, '_bias'), 
+	variable.name = 'mu', value.name = 'bias')
+bias_dat$mu <- sub('mu_', '', sub('_bias', '', bias_dat$mu))
+bias_dat$method <- factor(bias_dat$method, 
+	levels = c('gibbs', 'cavi'), 
+	labels = c('Gibbs', 'CAVI'))
+
+# get mean bias
+bias_dat_mean <- aggregate(bias ~ n + method + mu, 
+	data = bias_dat, mean)
+colnames(bias_dat_mean)[4] <- 'mean'
+
+# get sd of bias
+bias_dat_sd <- aggregate(bias ~ n + method + mu, 
+	data = bias_dat, sd)
+colnames(bias_dat_sd)[4] <- 'sd'
+
+# merge mean and sd data
+bias_plot_dat <- merge(bias_dat_mean, bias_dat_sd, 
+	by = c('n', 'method', 'mu'))
+bias_plot_dat$n <- as.factor(bias_plot_dat$n)
+
+# plot as points
+bias_plot <- ggplot(data = bias_plot_dat, 
+		aes(x = n, y = mean, color = method)) +
+	geom_hline(yintercept = 0, linetype = 2, color = 'black') +
+	geom_point(position = position_dodge(width = 0.35)) +
+	geom_pointrange(
+		aes(ymin = mean - sd, 
+			ymax = mean + sd),
+		position = position_dodge(width = 0.35)) +
+	labs(y = 'Bias') +
+	scale_color_manual(name = 'Method', 
+		values = c('#F26430','#36908A'),
+		breaks = c('Gibbs', 'CAVI'))
+
+bias_plot + facet_wrap(. ~ mu,
+	labeller = label_bquote(hat(mu)[.(mu)]))
+
+# table data
+# cast mean, sd data
+bias_dat_mean <- reshape2::dcast(bias_dat_mean, n + mu ~ method, value.var = 'mean')
+colnames(bias_dat_mean)[3:4] <- paste0(colnames(bias_dat_mean)[3:4], '_mean')
+
+bias_dat_sd <- reshape2::dcast(bias_dat_sd, n + mu ~ method, value.var = 'sd')
+colnames(bias_dat_sd)[3:4] <- paste0(colnames(bias_dat_sd)[3:4], '_sd')
+
+# merge mean and sd data
+bias_table_dat <- merge(bias_dat_mean, bias_dat_sd, 
+	by = c('n', 'mu'))
+
+# format data
+bias_table_dat$CAVI <- paste(round(bias_table_dat$CAVI_mean, 3), '$\\pm$', round(bias_table_dat$CAVI_sd, 3))
+bias_table_dat$Gibbs <- paste(round(bias_table_dat$Gibbs_mean, 3), '$\\pm$', round(bias_table_dat$Gibbs_sd, 3))
+bias_table_dat <- bias_table_dat[, c('n', 'mu', 'Gibbs', 'CAVI')]
+
+# finish columns, remove duplicate ns
+colnames(bias_table_dat) <- c('n', '$\\mu_k$', 'Gibbs', 'CAVI')
+bias_table_dat[duplicated(bias_table_dat$n), 'n'] <- ''
+
+report_table(bias_table_dat, escape = FALSE,
+	caption = 'Bias (Mean $\\pm$ SD)')
+```
+
+
+
+```{r, problem4_coverage, fig.cap = 'Coverage for each for each $\\hat{\\mu}_k$.', echo = FALSE}
+# set up data frame for plot
+coverage_dat <- reshape2::melt(dat, 
+	id.vars = c('i', 'n', 'method'), 
+	measure.vars = paste0('mu_', 1:4, '_coverage'), 
+	variable.name = 'mu', value.name = 'coverage')
+coverage_dat$mu <- sub('mu_', '', sub('_coverage', '', coverage_dat$mu))
+coverage_dat$coverage <-  as.integer(coverage_dat$coverage)
+coverage_dat$n <- as.factor(coverage_dat$n)
+coverage_dat$method <- factor(coverage_dat$method, 
+	levels = c('gibbs', 'cavi'), 
+	labels = c('Gibbs', 'CAVI'))
+
+# get mean coverage
+coverage_dat_mean <- aggregate(coverage ~ n + method + mu, 
+	data = coverage_dat, mean)
+colnames(coverage_dat_mean)[4] <- 'mean'
+
+# get sd of coverage
+coverage_dat_sd <- aggregate(coverage ~ n + method + mu, 
+	data = coverage_dat, sd)
+colnames(coverage_dat_sd)[4] <- 'sd'
+
+# merge mean and sd data
+coverage_plot_dat <- merge(coverage_dat_mean, coverage_dat_sd, 
+	by = c('n', 'method', 'mu'))
+coverage_plot_dat$n <- as.factor(coverage_plot_dat$n)
+
+# plot as points
+coverage_plot <- ggplot(data = coverage_plot_dat, 
+		aes(x = n, y = mean, color = method)) +
+	geom_hline(yintercept = 1, linetype = 2, color = 'black') +
+	geom_point(size = 1.25,
+		position = position_dodge(width = 0.35)) +
+	geom_pointrange(
+		aes(ymin = mean - sd, 
+			ymax = mean + sd),
+		position = position_dodge(width = 0.35)) +
+	labs(y = 'Pr(Coverage)') +
+	scale_color_manual(name = 'Method', 
+		values = c('#F26430','#36908A'),
+		breaks = c('Gibbs', 'CAVI'))
+
+coverage_plot + facet_wrap(. ~ mu,
+	labeller = label_bquote(hat(mu)[.(mu)]))
+
+
+# table data
+# cast mean, sd data
+coverage_dat_mean <- reshape2::dcast(coverage_dat_mean, n + mu ~ method, value.var = 'mean')
+colnames(coverage_dat_mean)[3:4] <- paste0(colnames(coverage_dat_mean)[3:4], '_mean')
+
+coverage_dat_sd <- reshape2::dcast(coverage_dat_sd, n + mu ~ method, value.var = 'sd')
+colnames(coverage_dat_sd)[3:4] <- paste0(colnames(coverage_dat_sd)[3:4], '_sd')
+
+# merge mean and sd data
+coverage_table_dat <- merge(coverage_dat_mean, coverage_dat_sd, 
+	by = c('n', 'mu'))
+coverage_table_dat$n <- as.character(coverage_table_dat$n)
+
+# format table values
+coverage_table_dat$CAVI <- paste(round(coverage_table_dat$CAVI_mean, 3), '$\\pm$', round(coverage_table_dat$CAVI_sd, 3))
+coverage_table_dat$Gibbs <- paste(round(coverage_table_dat$Gibbs_mean, 3), '$\\pm$', round(coverage_table_dat$Gibbs_sd, 3))
+coverage_table_dat <- coverage_table_dat[, c('n', 'mu', 'Gibbs', 'CAVI')]
+
+# finish columns, remove duplicate ns
+colnames(coverage_table_dat) <- c('n', '$\\mu_k$', 'Gibbs', 'CAVI')
+coverage_table_dat[duplicated(coverage_table_dat$n), 'n'] <- ''
+
+report_table(coverage_table_dat, escape = FALSE,
+	caption = 'Coverage (Mean $\\pm$ SD)')
+```
+
+---
+
+\newpage
+
+CAVI was once again substantially faster than even single-chain Gibbs Sampling; CAVI took a fraction of a second for $n=100,1000$ and less than 2 seconds for $n=10000$ whereas, on average, Gibbs sampling took about 10 seconds for $n=100$, 1.5 minutes for $n=1000$ and around 17 minutes for $n=10000$.
+
+
+Performance for $\mu_1$ was comparable for all sample sizes. However, for $n=100$, both methods underestimated the other $\mu_k$  values; The sample size of $n=100$ was not sufficient for either method to accurately estimate $\mu_3$ and $\mu_4$; the proportion of coverage for was less than 50\% for $\mu_3$ and near 0\% for $\mu_4$ for this sample size. Gibbs sampling overestimated $\mu_2$ and $\mu_3$ for greater sample sizes while CAVI seemed more accurate. Both CAVI and Gibbs had very high standard deviation for $\mu_3$ for these larger sample sizes. 
+
+
+
+```{r, sessioninfo, echo = FALSE}
+sdtmval::write_sessionInfo('bios731_hw4_parrish', dir = here::here())
+```
+
