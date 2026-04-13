@@ -23,6 +23,12 @@
 │   └── preamble.tex
 ├── bios731_hw4_parrish.Rproj
 ├── logs
+│   ├── n100_sim_38378835_1.err
+│   ├── n100_sim_38378835_1.out
+│   ├── n1000_sim_38378836_1.err
+│   ├── n1000_sim_38378836_1.out
+│   ├── n10000_sim_38378837_1.err
+│   └── n10000_sim_38378837_1.out
 ├── results
 ├── sim
 │   ├── sim_data
@@ -41,8 +47,6 @@
     ├── simulate_data.R
     └── utility.R
 ```
-
-Slurm output will be directed
 
 
 ---
@@ -110,6 +114,8 @@ for n in 100 1000 10000; do
 
 done
 ```
+
+Log and error files will be found in `./logs/`. Example files are provided for the 1st iteration of my simulation.
 
 A file for each sample size *n* and simulation *i* is saved as `./sim/sim_data/sim_n${n}_${i}.Rds` and can be copied from the cluster to a local folder using `scp`. An example command is shown below:
 
