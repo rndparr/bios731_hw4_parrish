@@ -1,4 +1,7 @@
 
+###############################################################
+## REORDER MU, C
+###############################################################
 # sort mu smallest to largest, correct cluster values 
 reorder_mu_c <- function(mu_est, c_est){
 	# re-order mu, get index for reordering
@@ -11,7 +14,9 @@ reorder_mu_c <- function(mu_est, c_est){
 	return(fix_order)
 }
 
-
+###############################################################
+## FUNCTION TIMING
+###############################################################
 # function time
 func_time <- function(x){
 	system.time(x)[['elapsed']]

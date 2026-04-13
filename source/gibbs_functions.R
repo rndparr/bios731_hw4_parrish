@@ -1,8 +1,8 @@
 
 
-
-
-### SAMPLE CLUSTER
+###############################################################
+## SAMPLE CLUSTER
+###############################################################
 sample_cluster <- function(y, mu) {
 	K <- length(mu)
 	n <- length(y)
@@ -25,8 +25,9 @@ sample_cluster <- function(y, mu) {
 	return(c_sample)
 }
 
-
-### SAMPLE MU
+###############################################################
+## SAMPLE MU
+###############################################################
 sample_mu <- function(y, c, K, sigma2) {
 	# matrix of n_k, sum(y_k) values
 	nk_sum_yk <- sapply(1:K, 
@@ -48,8 +49,9 @@ sample_mu <- function(y, c, K, sigma2) {
 	return(mu_sample)
 }
 
-
-## GIBBS SAMPLER
+###############################################################
+## GIBBS SAMPLER - 1 chain
+###############################################################
 gibbs_chain <- function(y, K, sigma2, n_iter = 10000, burnin = 2000) {
 	n <- length(y)
 
@@ -88,6 +90,11 @@ gibbs_chain <- function(y, K, sigma2, n_iter = 10000, burnin = 2000) {
 }
 
 
+###############################################################
+## GIBBS SAMPLER-MULTIPLE CHAINS
+###############################################################
+
+# add time output to an individual chain (for use with gibbs_multi_chain)
 timed_gibbs_chain <- function(y, K, sigma2, n_iter = 10000, burnin = 2000) {
 	# run chain, timed
 	gibbs_time <- func_time(
@@ -101,7 +108,7 @@ timed_gibbs_chain <- function(y, K, sigma2, n_iter = 10000, burnin = 2000) {
 }
 
 
-## GIBBS SAMPLER-MULTIPLE CHAINS
+# run gibbs sampler with multiple chains
 gibbs_multi_chain <- function(y, K, sigma2, n_chains = 4, n_iter = 10000, burnin = 2000){
 
 	# replicate gibbs_chain n_chains times

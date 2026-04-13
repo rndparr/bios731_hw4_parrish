@@ -17,8 +17,8 @@ if(length(args) == 0) {
 	n <- as.integer(args[[2]])
 }
 
+# print session info to log
 print(sessionInfo())
-
 
 ###############################################################
 ## SOURCE FUNCTIONS
@@ -28,7 +28,6 @@ source(here::here('source', 'utility.R'))
 source(here::here('source', 'simulate_data.R'))
 source(here::here('source', 'gibbs_functions.R'))
 source(here::here('source', 'cavi_functions.R'))
-
 
 ###############################################################
 # PARAMETERS
@@ -83,7 +82,6 @@ cavi_res$time <- cavi_time
 ###############################################################
 # OUTPUT
 ###############################################################
-
 print('Saving output.')
 
 # output all method output
@@ -113,13 +111,6 @@ for (k in 1:K){
 
 # entire mu vector covered
 out[['coverage']] <- apply(out[, paste0('mu_', 1:4, '_coverage')], 1, all)
-
-# out <- rbind(
-# 	rbind(c(i, n, 'true', NA, mu_true, y_dat$c)), # true values
-# 	rbind(c(i, n, 'gibbs', gibbs_time, gibbs_res$mu_est, gibbs_res$c_est)), # Gibbs values
-# 	rbind(c(i, n, 'cavi', cavi_time, cavi_res$mu_est, cavi_res$c_est)) # CAVI values
-# 	)
-# colnames(out) <- c('i', 'n', 'method', 'time', mu_c_cols)
 
 # append to dataframe
 write.table(

@@ -3,12 +3,17 @@
 #SBATCH --array=1-500%100
 #SBATCH --nodes=1 # number of nodes
 
-############################
 # script assumes working directory is --chdir=/full/path/to/bios731_hw4_parrish/logs
 
+###############################################################
+## LOAD R
+###############################################################
 # load R
 module load R/4.5.2
 
+###############################################################
+## CREATE DIRECTORIES, ADD HEADER TO OUTPUT FILE
+###############################################################
 # output file for sample size n sims
 sim_n_out_file=../sim/sim_n${n}.txt
 
@@ -19,9 +24,15 @@ if [ ! -f "${sim_n_out_file}" ]; then
 	echo -e 'i\tn\tmethod\ttime\tmu_1\tmu_2\tmu_3\tmu_4\tmu_1_ci_l\tmu_2_ci_l\tmu_3_ci_l\tmu_4_ci_l\tmu_1_ci_u\tmu_2_ci_u\tmu_3_ci_u\tmu_4_ci_u\tmu_1_bias\tmu_2_bias\tmu_3_bias\tmu_4_bias\tmu_1_coverage\tmu_2_coverage\tmu_3_coverage\tmu_4_coverage\tcoverage' > ../sim/sim_n${n}.txt
 fi
 
+###############################################################
+## RUN iTH SIMULATION
+###############################################################
 # from ${pdir}/logs, run the run_sim.R script
 Rscript ../source/run_sim.R ${SLURM_ARRAY_TASK_ID} ${n}
 
+###############################################################
+## UNLOAD R
+###############################################################
 # unload R
 module unload R/4.5.2
 

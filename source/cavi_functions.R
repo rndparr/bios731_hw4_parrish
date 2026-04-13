@@ -1,6 +1,9 @@
 
 
+
+###############################################################
 ## GET ELBO
+###############################################################
 get_elbo <- function(y, pi_i, mu_star, sigma2_star, sigma2) {
 	n <- length(y)
 	K <- length(mu_star)
@@ -13,8 +16,9 @@ get_elbo <- function(y, pi_i, mu_star, sigma2_star, sigma2) {
 	return(prior_term + lik_term + entropy_c + entropy_mu)
 }
 
-
+###############################################################
 ## GET PI_I
+###############################################################
 get_pi_i <- function(y, mu_star, sigma2_star) {
 	n <- length(y)
 
@@ -29,8 +33,9 @@ get_pi_i <- function(y, mu_star, sigma2_star) {
 	return(pi_i)
 }
 
-
+###############################################################
 ## CAVI MODEL
+###############################################################
 cavi_model <- function(y, K, sigma2, mu_star = NULL, sigma2_star = NULL, tol = 1e-6, max_iter = 100) {
 	n <- length(y)
 
