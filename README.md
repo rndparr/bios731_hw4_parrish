@@ -15,8 +15,34 @@
 ## Directories and Files
 
 ```
-
+.
+├── README.md
+├── analysis
+│   ├── HW4_final_report.Rmd
+│   ├── HW4_final_report.pdf
+│   └── preamble.tex
+├── bios731_hw4_parrish.Rproj
+├── logs
+├── results
+├── sim
+│   ├── sim_data
+│   │   ├── sim_n10000_1.Rds
+│   │   ├── sim_n1000_1.Rds
+│   │   └── sim_n100_1.Rds
+│   ├── sim_n100.txt
+│   ├── sim_n1000.txt
+│   └── sim_n10000.txt
+└── source
+    ├── cavi_functions.R
+    ├── gibbs_functions.R
+    ├── run_sim.R
+    ├── run_sim_multichain.R
+    ├── sbatch_run_sim.sh
+    ├── simulate_data.R
+    └── utility.R
 ```
+
+Slurm output will be directed
 
 
 ---
@@ -42,9 +68,18 @@ install.packages(c("coda", "ggplot2", "here", "kableExtra", "knitr"))
 
 - here
 
-```R
-install.packages(c("here"))
+```bash
+# load the R module
+module load R/4.5.2
+
+# install the
+Rscript -e 'install.packages("here")'
+
+# unload the R module
+module unload R/4.5.2
 ```
+
+The `sbatch_run_sim.sh` script assumes that the cluster is using the Slurm system for job scheduling and that [Environment Modules](https://modules.readthedocs.io/en/latest/index.html) is installed on the cluster with module `R/4.5.2` available to load. Different package management configurations (ie, spack, etc.) will require modifying the `sbatch_run_sim.sh` file to properly load R. Different cluster schedulers (ie, SGE, etc.) will require more extensive modifications to `sbatch_run_sim.sh` and to the submission command to run the simulation. The `here` package should be installed in the user's R package library directory.
 
 
 ### Example Slurm Command on RHPC
@@ -82,7 +117,10 @@ A file for each sample size *n* and simulation *i* is saved as `./sim/sim_data/s
 scp user@cluster:/full/path/to/bios731_hw4_parrish/sim/sim_data/sim_n${n}_${i}.Rds /local/full/path/to/bios731_hw4_parrish/sim/sim_data/
 ```
 
+Output for the 1st iteration from my simulation are `./sim/sim_data/sim_n${n}_1.Rds` and are available in this repo.
+
 Once results are finished, concatenate the estimates results using:
+
 ```bash
 # loop over sample sizes
 for n in 100 1000 10000; do
