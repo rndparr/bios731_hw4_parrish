@@ -1,10 +1,19 @@
-/data/*.Rds
-/data/*.Rda
-.DS_Store
-/analysis/HW4_final_report_cache
+*.DS_Store
 .Rproj.user
+analysis/HW4_final_report_cache
+logs/*
+!logs/n100_sim_38378835_1.out
+!logs/n100_sim_38378835_1.err
+!logs/n1000_sim_38378836_1.out
+!logs/n1000_sim_38378836_1.err
+!logs/n10000_sim_38378837_1.out
+!logs/n10000_sim_38378837_1.err
 sim/sim_data/*
 !sim/sim_data/sim_n100_1.Rds
 !sim/sim_data/sim_n1000_1.Rds
 !sim/sim_data/sim_n10000_1.Rds
+sim/sim_out/*
+!sim/sim_out/sim_n100_i1.txt
+!sim/sim_out/sim_n1000_i1.txt
+!sim/sim_out/sim_n10000_i1.txt
 
