@@ -129,9 +129,7 @@ for n in 100 1000 10000; do
 
 	# submit command and get jobid
 	jobid=`${submission_command} | cut -d" " -f4`
-
 	echo ${jobid}" submitted"
-
 done
 ```
 
@@ -206,9 +204,7 @@ loaded via a namespace (and not attached):
 [37] lifecycle_1.0.5    vctrs_0.7.2        sdtmval_0.4.1      evaluate_1.0.5    
 [41] glue_1.8.0         farver_2.1.2       reshape2_1.4.5     rmarkdown_2.31    
 [45] tools_4.5.2        pkgconfig_2.0.3    htmltools_0.5.9   
-
 ```
-
 
 ### RHPC
 
