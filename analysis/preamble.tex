@@ -1,0 +1,45 @@
+\usepackage{amsmath,amssymb,bm,caption,float,multirow,upgreek}
+
+% custom vector commands
+\let\oldvec\vec
+\renewcommand{\vec}[1]{\mathbf{\boldsymbol{#1}}}
+\newcommand{\vbeta}{\vec{\upbeta}}
+\newcommand{\vmu}{\vec{\upmu}}
+\newcommand{\vpi}{\vec{\uppi}}
+\newcommand{\vsigma}{\vec{\upsigma}}
+\newcommand{\vtheta}{\vec{\uptheta}}
+\newcommand{\vx}{\vec{x}}
+\newcommand{\vX}{\vec{X}}
+
+% stats
+\newcommand{\N}[1]{\textsl{N}\!\left(#1\right)}
+\newcommand{\Nm}[2]{\textsl{N}_{#1}\!\left(#2\right)}
+\newcommand{\probs}[1]{\textsl{P}\!\left(#1\right)}
+\newcommand{\probss}[2]{\textnormal{P}_{#1}\!\left(#2\right)}
+\newcommand{\ex}[1]{\textnormal{E}\!\left[#1\right]}
+\newcommand{\exc}[2]{\textnormal{E}_{#1}\!\left[#2\right]}
+\newcommand{\var}[1]{\textnormal{Var}\!\left(#1\right)}
+\newcommand{\cov}[1]{\textnormal{Cov}\!\left(#1\right)}
+\newcommand{\mse}[1]{\textnormal{MSE}\!\left(#1\right)}
+\newcommand{\bias}[1]{\textnormal{Bias}\!\left(#1\right)}
+\newcommand{\iid}{\overset{\text{iid}}{\sim}}
+\newcommand{\iidsim}{ \stackrel{\mathclap{iid}}{\sim} }
+
+% custom parentheses
+\newcommand{\lrbr}[1]{\left\lbrace #1\right\rbrace}
+\newcommand{\lrp}[1]{\left( #1\right)}
+\newcommand{\lrb}[1]{\left[ #1\right]}
+\newcommand{\lrv}[1]{\left| #1\right|}
+
+% matrices
+\newcommand{\bsmallmat}[1]{\left[\begin{smallmatrix}#1\end{smallmatrix}\right] }
+\newcommand{\bmat}[1]{\begin{bmatrix}#1\end{bmatrix} }
+\newcommand{\pmat}[1]{\begin{pmatrix}#1\end{pmatrix} }
+
+% other
+\DeclareMathOperator{\logit}{logit}
+\DeclareMathOperator{\se}{se}
+\newcommand{\inv}{ ^{-1} }
+
+% float placement
+\floatplacement{figure}{H}

@@ -22,7 +22,14 @@
 │   ├── HW4_final_report.pdf
 │   └── preamble.tex
 ├── bios731_hw4_parrish.Rproj
+├── bios731_hw4_parrish_sessionInfo.txt
 ├── logs
+│   ├── n100_sim_38378835_1.err
+│   ├── n100_sim_38378835_1.out
+│   ├── n1000_sim_38378836_1.err
+│   ├── n1000_sim_38378836_1.out
+│   ├── n10000_sim_38378837_1.err
+│   └── n10000_sim_38378837_1.out
 ├── results
 ├── sim
 │   ├── sim_data
@@ -36,13 +43,13 @@
     ├── cavi_functions.R
     ├── gibbs_functions.R
     ├── run_sim.R
-    ├── run_sim_multichain.R
     ├── sbatch_run_sim.sh
     ├── simulate_data.R
     └── utility.R
 ```
 
-Slurm output will be directed
+
+
 
 
 ---
@@ -59,9 +66,10 @@ Slurm output will be directed
 - here
 - kableExtra
 - knitr
+- sdtmval
 
 ```R
-install.packages(c("coda", "ggplot2", "here", "kableExtra", "knitr"))
+install.packages(c("coda", "ggplot2", "here", "kableExtra", "knitr", "sdtmval"))
 ```
 
 ### Required R packages (cluster)
@@ -111,6 +119,8 @@ for n in 100 1000 10000; do
 done
 ```
 
+Log and error files will be found in `./logs/`. Example files are provided for the 1st iteration of my simulation.
+
 A file for each sample size *n* and simulation *i* is saved as `./sim/sim_data/sim_n${n}_${i}.Rds` and can be copied from the cluster to a local folder using `scp`. An example command is shown below:
 
 ```bash 
@@ -124,12 +134,10 @@ Once results are finished, concatenate the estimates results using:
 ```bash
 # loop over sample sizes
 for n in 100 1000 10000; do
-
 	# loop through simulations
 	for i in {1..500}; do
 		cat ./sim/sim_out/sim_n${n}_i${i}.txt >> ./sim/sim_n${n}.txt
 	done
-
 done
 ```
 
@@ -158,7 +166,7 @@ BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/ve
 LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+[1] en_US/UTF-8/en_US/C/en_US/en_US
 
 time zone: America/New_York
 tzcode source: internal
@@ -166,8 +174,23 @@ tzcode source: internal
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
+other attached packages:
+[1] ggplot2_4.0.2    kableExtra_1.4.0 here_1.0.2       coda_0.19-4.1   
+
 loaded via a namespace (and not attached):
-[1] compiler_4.5.2  here_1.0.2      rprojroot_2.1.1
+ [1] gtable_0.3.6       dplyr_1.2.0        compiler_4.5.2     Rcpp_1.1.1        
+ [5] tinytex_0.58       tidyselect_1.2.1   xml2_1.5.2         stringr_1.6.0     
+ [9] systemfonts_1.3.2  scales_1.4.0       textshaping_1.0.5  yaml_2.3.12       
+[13] fastmap_1.2.0      lattice_0.22-9     plyr_1.8.9         R6_2.6.1          
+[17] labeling_0.4.3     generics_0.1.4     knitr_1.51         tibble_3.3.1      
+[21] rprojroot_2.1.1    svglite_2.2.2      pillar_1.11.1      RColorBrewer_1.1-3
+[25] rlang_1.1.7        stringi_1.8.7      xfun_0.57          S7_0.2.1          
+[29] otel_0.2.0         viridisLite_0.4.3  cli_3.6.5          withr_3.0.2       
+[33] magrittr_2.0.5     digest_0.6.39      grid_4.5.2         rstudioapi_0.18.0 
+[37] lifecycle_1.0.5    vctrs_0.7.2        sdtmval_0.4.1      evaluate_1.0.5    
+[41] glue_1.8.0         farver_2.1.2       reshape2_1.4.5     rmarkdown_2.31    
+[45] tools_4.5.2        pkgconfig_2.0.3    htmltools_0.5.9   
+
 ```
 
 
