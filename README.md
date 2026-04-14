@@ -43,11 +43,13 @@
     ├── cavi_functions.R
     ├── gibbs_functions.R
     ├── run_sim.R
-    ├── run_sim_multichain.R
     ├── sbatch_run_sim.sh
     ├── simulate_data.R
     └── utility.R
 ```
+
+
+
 
 
 ---
